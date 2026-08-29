@@ -1,0 +1,17 @@
+.venv/
+__pycache__/
+.ipynb_checkpoints/
+
+# Large datasets
+data/
+*.zip
+
+# Trained models
+models/*.joblib
+models/*.pkl
+
+# OS files
+.DS_Store
+
+# Jupyter/runtime files
+.pytest_cache/
