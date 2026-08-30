@@ -4,6 +4,15 @@ Predicting loan default for applicants with little or no credit history.
 
 **Test ROC-AUC: 0.7764** — reproducible from raw data with `python -m src.train`.
 
+Cross-validation on the development set gave 0.7686; the held-out test
+score is higher because the final model trains on all 246,008 development
+rows while each CV fold trains on two-thirds of that, and because CV
+averages several folds against a single test evaluation.
+
+The test set was split off before any exploration and was not used for
+any decision — not for feature selection, not for choosing which tables
+to join, not for setting thresholds. It was opened once, at the end.
+
 ## The problem
 
 Home Credit lends to people excluded from mainstream banking — applicants
