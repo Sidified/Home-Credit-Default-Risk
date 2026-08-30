@@ -127,8 +127,7 @@ it would have failed on new inputs.
 home-credit-default-risk/
 ├── data/
 │   └── raw/                        # not tracked — downloaded via Kaggle API
-├── models/
-│   └── lgbm_final.joblib           # model + column order
+├── models/                         # created by src/train.py, not tracked
 ├── notebooks/
 │   ├── 01_first_look.ipynb
 │   ├── 02_eda.ipynb
@@ -144,12 +143,13 @@ home-credit-default-risk/
 │   └── table_contributions.csv
 ├── src/
 │   ├── data.py                     # loading and table aggregation
-│   ├── features.py                 # row-wise feature engineering
+│   ├── features.py                 # feature engineering and category handling
 │   ├── train.py                    # end-to-end training
 │   └── evaluate.py                 # group AUC, capture rates, calibration
 ├── tests/
-|   └──test_features.py
+│   └── test_features.py
 ├── requirements.txt
+├── pytest.ini
 └── README.md
 ```
 
