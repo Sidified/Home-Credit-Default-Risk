@@ -149,6 +149,7 @@ home-credit-default-risk/
 │   └── evaluate.py                 # group AUC, capture rates, calibration
 ├── tests/
 │   └── test_features.py
+├── requirements-dev.txt
 ├── requirements.txt
 ├── pytest.ini
 └── README.md
@@ -157,6 +158,10 @@ home-credit-default-risk/
 
 ## Reproducing
 
+The Kaggle CLI needs an API token and you must
+accept the competition rules on the Kaggle website first, or the download
+returns 403.
+
 ```bash
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
@@ -164,6 +169,8 @@ kaggle competitions download -c home-credit-default-risk -p data/raw
 cd data/raw && unzip home-credit-default-risk.zip && cd ../..
 python -m src.train
 ```
+
+To run the notebooks or tests: `pip install -r requirements-dev.txt`
 
 ## Limitations
 
