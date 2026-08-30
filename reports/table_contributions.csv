@@ -1,0 +1,5 @@
+features,cv_auc,cv_std
+application only,0.7536,0.0019
++ ratios,0.7601,0.0009
++ bureau,0.7647,0.0011
++ previous application,0.7686,0.0011

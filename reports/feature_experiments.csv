@@ -1,0 +1,7 @@
+features,cv_auc,cv_std
+baseline,0.7536,0.0019
++ ratios,0.7601,0.0009
++ time,0.7534,0.0012
++ ext,0.7533,0.0007
++ flags,0.7536,0.0019
++ all features,0.7602,0.0007
