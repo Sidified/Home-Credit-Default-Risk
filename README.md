@@ -40,12 +40,14 @@ six supporting tables. 67 columns have missing values; 41 are over half empty.
 |---|---:|---:|
 | Application table only | 0.7536 | — |
 | + 5 engineered ratios | 0.7601 | +0.0065 |
-| + bureau (1.7M rows → 17 cols) | 0.7647 | +0.0046 |
-| + previous applications (1.67M rows → 18 cols) | 0.7686 | +0.0039 |
+| + bureau (1.7M rows → 16 cols) | 0.7647 | +0.0046 |
+| + previous applications (1.67M rows → 19 cols) | 0.7686 | +0.0039 |
 
 **Five hand-built ratio features contributed more than either million-row
 table.** `CREDIT_TERM` (annuity ÷ credit) ranks 5th in model importance —
 above the raw amounts it's built from, and above age and employment length.
+
+Each additional data source also returned less than the one before.
 
 ## Which feature engineering worked, and why
 
@@ -62,11 +64,23 @@ Four groups were tested independently against the baseline:
 
 Seventeen features were dropped for a cost of 0.0001 AUC.
 
+A caveat on precision: fold standard deviations run 0.0007 to 0.0019, so
+every difference in this table except the ratios is smaller than the noise.
+The correct reading is not that these groups hurt performance, but that no
+measurable benefit was detected — sufficient reason to drop them, since an
+unmeasurable gain doesn't justify seventeen features.
+
 The pattern: **gradient boosting benefits from features it cannot construct
 itself.** A ratio requires division, which a tree cannot express by splitting
 on two columns separately. `AGE_YEARS` is `DAYS_BIRTH` times a constant, and
 `EXT_MEAN` restates columns the model already has — trees build their own
 interactions, so both added nothing.
+
+The principle didn't generalise, though. An `EXTERNAL_DEBT_INCOME` ratio
+(bureau debt ÷ income) scored 0.7644 against 0.7647 without it — a difference
+of 0.0003 against a fold standard deviation of 0.0011, so indistinguishable
+from noise. It was dropped as unhelpful rather than harmful; three folds
+cannot resolve a difference that small.
 
 ## Business metric
 
@@ -134,6 +148,11 @@ bug: `add_ratios` divided by `AMT_INCOME_TOTAL` without guarding against zero.
 No training row has zero income, so the bug was invisible in the data — but
 it would have failed on new inputs.
 
+Category levels are learned from the development set and reused at inference.
+LightGBM encodes categories by position, so letting new data build its own
+levels would shift every code after a missing one — producing wrong
+predictions with no error raised.
+
 ## Repository
 
 ```text
@@ -167,12 +186,10 @@ home-credit-default-risk/
 └── README.md
 ```
 
-
 ## Reproducing
 
-The Kaggle CLI needs an API token and you must
-accept the competition rules on the Kaggle website first, or the download
-returns 403.
+The Kaggle CLI needs an API token and you must accept the competition rules
+on the Kaggle website first, or the download returns 403.
 
 ```bash
 python3 -m venv .venv && source .venv/bin/activate
