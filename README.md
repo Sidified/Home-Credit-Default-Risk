@@ -49,11 +49,12 @@ Four groups were tested independently against the baseline:
 
 | Group | CV AUC | Verdict |
 |---|---:|---|
+| Baseline (no engineered features) | 0.7536 | — |
 | Ratios | 0.7601 | +0.0065 — kept |
-| Time transforms | 0.7534 | no effect — dropped |
-| EXT_SOURCE combinations | 0.7533 | no effect — dropped |
-| Document/contact flags | 0.7536 | no effect — dropped |
-| All combined | 0.7602 | +0.0001 over ratios alone |
+| Time transforms | 0.7534 | below baseline, within noise — dropped |
+| EXT_SOURCE combinations | 0.7533 | below baseline, within noise — dropped |
+| Document/contact flags | 0.7536 | identical to baseline — dropped |
+| All four combined | 0.7602 | +0.0001 over ratios alone |
 
 Seventeen features were dropped for a cost of 0.0001 AUC.
 
