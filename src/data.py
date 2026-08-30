@@ -11,9 +11,7 @@ def load_applications(filename="application_train.csv"):
 
 
 def aggregate_bureau(bureau):
-    b = bureau.copy()
-
-    num_agg = b.groupby("SK_ID_CURR").agg({
+    num_agg = bureau.groupby("SK_ID_CURR").agg({
         "DAYS_CREDIT": ["count", "mean", "min", "max"],
         "CREDIT_DAY_OVERDUE": ["mean", "max"],
         "AMT_CREDIT_SUM": ["sum", "mean", "max"],
@@ -27,35 +25,25 @@ def aggregate_bureau(bureau):
         for c in num_agg.columns
     ]
 
-    active = (
-        b[b["CREDIT_ACTIVE"] == "Active"]
-        .groupby("SK_ID_CURR")
-        .size()
-    )
-
-    closed = (
-        b[b["CREDIT_ACTIVE"] == "Closed"]
-        .groupby("SK_ID_CURR")
-        .size()
-    )
+    # Only Active and Closed are counted. Sold (6,527 rows) and
+    # Bad debt (21 rows) are too rare across 1.7M records to be useful.
+    active = bureau[bureau["CREDIT_ACTIVE"] == "Active"].groupby("SK_ID_CURR").size()
+    closed = bureau[bureau["CREDIT_ACTIVE"] == "Closed"].groupby("SK_ID_CURR").size()
 
     num_agg["BURO_ACTIVE_COUNT"] = active
     num_agg["BURO_CLOSED_COUNT"] = closed
 
-    num_agg[
-        ["BURO_ACTIVE_COUNT", "BURO_CLOSED_COUNT"]
-    ] = num_agg[
-        ["BURO_ACTIVE_COUNT", "BURO_CLOSED_COUNT"]
-    ].fillna(0)
+    num_agg[["BURO_ACTIVE_COUNT", "BURO_CLOSED_COUNT"]] = (
+        num_agg[["BURO_ACTIVE_COUNT", "BURO_CLOSED_COUNT"]].fillna(0)
+    )
 
     return num_agg.reset_index()
 
 
 def aggregate_previous(previous):
-    p = previous.copy()
 
     # Numerical features
-    num_agg = p.groupby("SK_ID_CURR").agg({
+    num_agg = previous.groupby("SK_ID_CURR").agg({
         "SK_ID_PREV": ["count"],
         "AMT_ANNUITY": ["mean", "max"],
         "AMT_APPLICATION": ["mean", "max"],
@@ -72,8 +60,8 @@ def aggregate_previous(previous):
 
     # Contract status counts
     status = pd.crosstab(
-        p["SK_ID_CURR"],
-        p["NAME_CONTRACT_STATUS"]
+        previous["SK_ID_CURR"],
+        previous["NAME_CONTRACT_STATUS"]
     )
 
     for col in [

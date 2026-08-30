@@ -9,9 +9,13 @@ score is higher because the final model trains on all 246,008 development
 rows while each CV fold trains on two-thirds of that, and because CV
 averages several folds against a single test evaluation.
 
-The test set was split off before any exploration and was not used for
-any decision — not for feature selection, not for choosing which tables
-to join, not for setting thresholds. It was opened once, at the end.
+The test set was split off before any modelling decision was made, and was
+not used for feature selection, for choosing which tables to join, or for
+setting thresholds. It was scored once, at the end.
+
+Notebook 01 inspects dataset-level metadata — shape, class balance, missing
+value rates — on the full file before the split. Every finding that shaped
+the model came from the development set only, from notebook 02 onward.
 
 ## The problem
 
@@ -111,9 +115,17 @@ it inherits whatever the external bureaus got wrong.
 - `DAYS_EMPLOYED = 365243` appears for 44,143 applicants (17.9%). It's a
   placeholder, and 44,126 of them are pensioners — a population marker, not
   dirt. They default at 5.37% versus 8.66%.
-- The same 365243 code recurs in three columns of `previous_application`.
+- The same 365243 code recurs in three columns of `previous_application`
+  (`DAYS_FIRST_DRAWING`, `DAYS_LAST_DUE`, `DAYS_TERMINATION`). Those columns
+  are not used in the current feature set.
 - Missingness carries signal: `AMT_REQ_CREDIT_BUREAU_*` missing implies a
   10.34% default rate versus 7.72% when present.
+- `CREDIT_ACTIVE` in the bureau table has four values, but the distribution
+  is extreme: Closed 1,079,273 / Active 630,607 / Sold 6,527 / **Bad debt 21**.
+  A written-off loan should be the strongest signal in this table, and it is
+  effectively absent — 21 records in 1.7 million. Write-offs are presumably
+  recorded as "Closed" instead, which means the bureau data cannot distinguish
+  a loan repaid in full from one abandoned.
 
 ## Tests
 
