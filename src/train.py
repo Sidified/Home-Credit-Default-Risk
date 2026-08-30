@@ -8,7 +8,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import roc_auc_score
 
 from src.data import build_dataset
-from src.features import build_features
+from src.features import build_features, extract_categories
 
 
 RANDOM_STATE = 42
@@ -35,8 +35,12 @@ def main():
         stratify=y,
     )
 
+    # Categories are learned from the development set only, then reused
+    # for the test set. LightGBM encodes categories by position, so
+    # letting the test set build its own levels would silently shift codes.
     X_dev = build_features(X_dev)
-    X_test = build_features(X_test)[X_dev.columns]
+    categories = extract_categories(X_dev)
+    X_test = build_features(X_test, categories=categories)[X_dev.columns]
 
     print(
         f"Training on {X_dev.shape[0]} rows, "
@@ -62,10 +66,13 @@ def main():
 
     MODEL_PATH.parent.mkdir(exist_ok=True)
 
+    # Save the column order and category levels alongside the model.
+    # Without both, predictions on new data can be silently wrong.
     joblib.dump(
         {
             "model": model,
             "columns": list(X_dev.columns),
+            "categories": categories,
         },
         MODEL_PATH,
     )

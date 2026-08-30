@@ -1,8 +1,16 @@
-"""Feature engineering. Every transformation is row-wise, so there is
-nothing fitted here and no leakage risk from applying it before splitting.
+"""Feature engineering.
+
+Ratios, indicators and the DAYS_EMPLOYED anomaly flag are row-wise, so
+there is no leakage risk from applying them before splitting.
+
+Category levels are the one exception: they are learned from the training
+data and must be passed to any later call. LightGBM encodes categories by
+position, so a level absent from new data would shift every subsequent
+code and silently produce wrong predictions.
 """
 
 import numpy as np
+import pandas as pd
 
 
 def add_ratios(df):
@@ -28,8 +36,9 @@ def add_ratios(df):
         df["AMT_INCOME_TOTAL"] / df["CNT_FAM_MEMBERS"]
     )
 
+    # Guard against division by zero. No training row has zero income,
+    # but new data could.
     df = df.replace([np.inf, -np.inf], np.nan)
-
 
     return df
 
@@ -53,10 +62,16 @@ def add_history_indicators(df):
     return df
 
 
-def prep_for_lgbm(df):
+def prep_for_lgbm(df, categories=None):
+    """Prepare a frame for LightGBM.
+
+    Pass `categories` (from `extract_categories` on the training frame)
+    whenever preparing data that is not the training set.
+    """
     df = df.copy()
 
-    # Handle DAYS_EMPLOYED anomaly
+    # DAYS_EMPLOYED = 365243 is a placeholder, not a duration.
+    # It marks pensioners, so the flag carries real signal.
     df["DAYS_EMPLOYED_ANOM"] = (
         df["DAYS_EMPLOYED"] == 365243
     ).astype("int8")
@@ -66,21 +81,34 @@ def prep_for_lgbm(df):
         .replace(365243, np.nan)
     )
 
-    # Convert categorical columns to pandas category
+    # Reuse training category levels when supplied, so integer codes
+    # stay identical across datasets.
     for col in df.select_dtypes(exclude="number").columns:
-        df[col] = df[col].astype("category")
+        if categories is not None and col in categories:
+            df[col] = pd.Categorical(df[col], categories=categories[col])
+        else:
+            df[col] = df[col].astype("category")
 
-    # Reduce float64 memory usage
+    # Halve memory on a 3.8 GB machine.
     for col in df.select_dtypes(include="float64").columns:
         df[col] = df[col].astype("float32")
 
     return df
 
 
-def build_features(df):
+def extract_categories(df):
+    """Capture the category levels learned from a prepared training frame."""
+    return {
+        col: df[col].cat.categories
+        for col in df.select_dtypes(include="category").columns
+    }
+
+
+def build_features(df, categories=None):
     """The full feature pipeline, in the order it must run."""
     return prep_for_lgbm(
         add_history_indicators(
             add_ratios(df)
-        )
+        ),
+        categories=categories,
     )
